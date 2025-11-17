@@ -1,0 +1,14 @@
+fastapi
+uvicorn[standard]
+python-multipart
+sentence-transformers
+folium
+pandas
+langchain
+langchain_openai
+langchain_community
+langgraph
+tavily-python
+chromadb
+python-dateutil
+python-dotenv

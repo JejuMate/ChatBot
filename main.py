@@ -38,7 +38,6 @@ async def chat_endpoint(request: ChatRequest):
         raise HTTPException(status_code=400, detail="요청 형식이 올바르지 않습니다.")
 
     try:
-        # invoke 실행
         inputs = {"messages": [HumanMessage(content=user_input)]}
         result = agent_app.invoke(inputs, config=config)
         
@@ -50,7 +49,6 @@ async def chat_endpoint(request: ChatRequest):
             if isinstance(msg, AIMessage) and msg.tool_calls:
                 for tool_call in msg.tool_calls:
                     if tool_call["name"] == "submit_final_response":
-                        # 우리가 원하던 JSON 데이터는 여기 arguments에 있습니다.
                         print("✅ 최종 응답 데이터 추출 성공")
                         return tool_call["args"]
 
@@ -67,7 +65,7 @@ async def chat_endpoint(request: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 class MapRequest(BaseModel):
-    places: List[str] # 예: ["제주공항", "애월카페", "협재해수욕장"]
+    places: List[str] 
 
 @app_fastapi.post("/map/create")
 async def create_map_endpoint(request: MapRequest):

@@ -1,0 +1,20 @@
+# 1. 보안 (절대 업로드 금지)
+.env
+
+# 2. 가상환경 및 시스템 파일
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+.vscode/
+.idea/
+
+# 3. 실행 결과물 (지도 파일 등)
+static/*.html
+!static/.gitkeep  
+
+# 4. 데이터 파일 
+data/
+
+# 5. 도커 관련 (필요하면 로컬 무시)
+.dockerignore

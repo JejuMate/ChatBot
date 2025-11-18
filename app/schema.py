@@ -103,4 +103,72 @@ class ChatTurnResponse(BaseModel):
     # LLM이 생성한 상세 JSON 응답
     response: AgentResponse = Field(..., description="LLM이 생성한 상세 JSON 응답 (AgentResponse 스키마)")
     # 백엔드가 상태 유지를 위해 클라이언트에 다시 돌려주는 간단한 dict
-    travel_plan: Optional[dict] = Field(None, description="업데이트된 간소화된 여행 일정 (JSON dict)")
+    travel_plan: Optional[dict] = Field(None, description="업데이트된 간소화된 여행 일정 (JSON dict)")# app/schema.py
+from pydantic import BaseModel, Field
+from typing import List, Optional, Literal
+
+# =========================================
+# 1. 입력 (Input Schema)
+# =========================================
+
+class TravelConstraints(BaseModel):
+    start_date: str = Field(..., description="여행 시작 날짜 (YYYY-MM-DD)")
+    end_date: str = Field(..., description="여행 종료 날짜 (YYYY-MM-DD)")
+    travel_style: str = Field(..., description="여행 스타일 (힐링, 액티비티, 문화&역사 등)")
+    companions: str = Field(..., description="동반자 (가족, 연인, 친구, 혼자)")
+    age_group: str = Field(..., description="연령대 (20대, 30대 등)")
+    additional_request: Optional[str] = Field(None, description="추가 요청 사항")
+
+class ChatRequest(BaseModel):
+    user_id: int
+    action: str = Field(..., description="요청 유형 (create_schedule, chat 등)")
+    constraints: Optional[TravelConstraints] = None # 일정 생성 시 필수
+    message: Optional[str] = None # 수정/대화 시 필수
+
+
+# =========================================
+# 2. 출력 (Output Schema) - 하위 객체들
+# =========================================
+
+class PlaceDetail(BaseModel):
+    name: str
+    category: str
+    latitude: float
+    longitude: float
+    address: str
+    description: Optional[str] = None
+
+class ScheduleItem(BaseModel):
+    day: int
+    time_slot: Literal["morning", "afternoon", "evening"]
+    place: PlaceDetail
+
+class TargetPlace(BaseModel):
+    day: int
+    time_slot: Literal["morning", "afternoon", "evening"]
+    place: str # 장소 이름
+
+# =========================================
+# 3. 출력 (Output Schema) - 최종 응답
+# =========================================
+
+class AgentResponse(BaseModel):
+    """LLM이 최종적으로 반환해야 하는 응답 스키마"""
+    response_text: str = Field(..., description="사용자에게 보여줄 텍스트 답변")
+    action: Literal["create_schedule", "suggest_alternative", "update_schedule", "remove_place", "chat"] = Field(..., description="백엔드 동작 트리거")
+    
+    # action='create_schedule' 일 때 사용
+    schedule: Optional[List[ScheduleItem]] = None
+    
+    # action='suggest_alternative', 'update_schedule', 'remove_place' 일 때 사용
+    target: Optional[TargetPlace] = None
+    
+    # action='suggest_alternative' 일 때 사용
+    alternative_places: Optional[List[PlaceDetail]] = None
+    
+    # action='update_schedule' 일 때 사용
+    new_place: Optional[PlaceDetail] = None
+    
+    # LangGraph 상태 관리를 위한 내부용 (JSON 출력엔 포함 안 됨)
+    class Config:
+        arbitrary_types_allowed = True
